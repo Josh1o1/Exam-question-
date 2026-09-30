@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clinical Laboratory — Interactive Quiz</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#101214;color:#f2f4f5;margin:0;padding:18px}
+.card{max-width:720px;margin:auto;background:#181b1f;border:1px solid #30353b;border-radius:18px;padding:22px}
+h1{font-size:21px;margin:0 0 8px}.muted{color:#aeb5bc;font-size:14px}
+.progress{height:7px;background:#30353b;border-radius:8px;margin:18px 0}.bar{height:100%;background:#d8dde2;border-radius:8px;width:0}
+.q{font-size:18px;line-height:1.45;margin:22px 0}
+.opt{display:block;width:100%;text-align:left;background:#22272c;color:#f2f4f5;border:1px solid #3a4148;border-radius:12px;padding:14px;margin:9px 0;font-size:15px}
+.opt:active{transform:scale(.99)} .opt.correct{border-color:#79c99b;background:#173323}
+.opt.wrong{border-color:#e28a8a;background:#351d1d}
+.feedback{margin-top:15px;padding:14px;border-radius:12px;background:#22272c;line-height:1.45}
+button.next{margin-top:14px;width:100%;padding:13px;border:0;border-radius:12px;background:#e5e7e9;color:#111;font-weight:700}
+.hidden{display:none}.score{font-size:30px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Clinical Laboratory — Exam Quiz</h1>
+<div class="muted" id="count"></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div id="quiz"></div><div id="result" class="hidden"></div>
+</div>
+<script>
+const Q=[
+{t:"mcq",q:"Which urine specimen is necessary for quantitative tests, especially quantitative determination of protein?",o:["Random specimen","Postprandial specimen","24-hour specimen","First morning specimen"],a:[2],e:"A 24-hour urine specimen is used for quantitative measurement such as total urinary protein over a defined period."},
+{t:"mcq",q:"Which statement about creatinine is FALSE?",o:["Increased creatinine may not become apparent until substantial renal function is lost.","A decreased GFR reduces creatinine filtration and can increase serum creatinine.","Creatinine is substantially filtered and also significantly secreted or reabsorbed by the tubules.","The amount excreted in urine is constant from day to day."],a:[2],e:"The note describes creatinine as filtered by the glomerulus with tubular secretion, but significant tubular reabsorption is not the normal mechanism described."},
+{t:"mcq",q:"In standard non-treponemal tests, which antigen is used?",o:["Cardiolipin","Reagin","Treponema antigens","Rapid Plasma Reagin"],a:[0],e:"Non-treponemal tests use cardiolipin-based antigen; reagin refers to the antibody detected."},
+{t:"mcq",q:"If an individual has A antigen on the surface of RBCs, what is the ABO blood group?",o:["A blood group","B blood group","Anti-A blood group","Anti-B blood group"],a:[0],e:"The ABO group is identified from RBC surface antigens. A antigen corresponds to group A."},
+{t:"mcq",q:"Which statement correctly describes the major crossmatch?",o:["Donor serum is mixed with recipient cells.","Donor red cells are mixed with recipient serum.","It is called major because donor antibodies are diluted by recipient cells.","It is less critical than the minor compatibility test."],a:[1],e:"The major crossmatch tests donor RBCs against recipient serum, where recipient antibodies could attack donor RBCs."},
+{t:"mcq",q:"Which enzyme is more specific for detecting liver injury?",o:["AST","ALT","GGT","ALP"],a:[1],e:"ALT is more liver-specific than AST because AST is also abundant in several non-hepatic tissues."},
+{t:"mcq",q:"An individual with blood group O Rh-negative can give red-cell blood to which ABO/Rh groups?",o:["Any blood group","O Rh-negative only","A, B, O and AB only, regardless of Rh","O Rh-positive and O Rh-negative only"],a:[0],e:"In the simplified ABO/Rh context of the supplied exam, O Rh-negative is the universal red-cell donor."},
+{t:"tf",q:"Whole blood, serum, CSF, and urine can all serve as samples for chemical analysis in clinical chemistry.",o:["True","False"],a:[0],e:"The supplied notes explicitly list all four as possible clinical chemistry samples."},
+{t:"mcq",q:"Which person is NOT a candidate for RhIG according to the supplied notes?",o:["Rh-negative woman delivering an Rh-positive baby","Rho-positive woman delivering an Rh-positive baby","Rh-negative woman at risk of Rh exposure","Rh-negative woman requiring prevention of Rh alloimmunization"],a:[1],e:"RhIG is used to prevent Rh alloimmunization in Rh-negative individuals. A Rho-positive woman is not the indicated candidate."},
+{t:"tf",q:"Thin blood smears are typically used for screening, particularly when malaria or babesiosis is suspected.",o:["True","False"],a:[0],e:"This statement appears directly in the supplied material."},
+{t:"mcq",q:"Which is NOT a stated purpose of concentration techniques in parasitology?",o:["To quantify/enumerate parasites","To use when parasite numbers are too high","For follow-up purpose","To concentrate parasites for detection"],a:[1],e:"The supplied question asks for the exception. 'Used when the number of parasites is too high' is not a stated purpose in the notes."},
+{t:"tf",q:"All stages of a parasite can be detected from loose stool.",o:["True","False"],a:[1],e:"The supplied exam marks this as a distinction: loose stool does not necessarily contain every parasite stage."},
+{t:"mcq",q:"Which of the following is NOT a body fluid listed in the supplied notes?",o:["Blood","CSF","Pleural fluid","Semen"],a:[3],e:"The original question is poorly worded because semen is also a body fluid. This item is therefore treated cautiously; the supplied exam's intended distinction is not well formed."},
+{t:"mcq",q:"Fluid surrounding the abdominal and pelvic organs is called:",o:["Pleural fluid","Pericardial fluid","Peritoneal fluid","Serous fluid"],a:[2],e:"Peritoneal fluid is associated with the peritoneal cavity around abdominal and pelvic organs."},
+{t:"tf",q:"Exudates are effusions resulting from inflammatory responses affecting a serous cavity, including infections and malignancies.",o:["True","False"],a:[0],e:"This statement is given directly in the supplied notes."},
+{t:"mcq",q:"According to the supplied exam, the second CSF tube is used for:",o:["Hematology only","Bacteriology and fungal study","Biochemical analysis","Biochemical and serological examination"],a:[3],e:"The supplied answer grouping identifies biochemical and serological examination for the second tube."},
+{t:"mcq",q:"Which parasite is the exception among organisms that can be seen in urine microscopy?",o:["Trichomonas vaginalis","Schistosoma haematobium","Wuchereria bancrofti","Giardia lamblia"],a:[3],e:"Giardia lamblia is the exception in the supplied list; the others can be associated with urine findings."},
+{t:"mcq",q:"Which factor is associated with increased CSF glucose?",o:["Active metabolism of glucose by microorganisms","Impaired CSF glucose transport through the blood-brain barrier","Active metabolism of glucose by cells","Increased glucose use by microorganisms"],a:[1],e:"The supplied notes associate increased CSF glucose with impaired transport into CSF and also with systemic hyperglycemia."},
+{t:"mcq",q:"Blood appears only in the first CSF tube and decreases in tubes 2 and 3. Which cause is most consistent?",o:["Subarachnoid/cerebral bleeding","Traumatic bleeding during lumbar puncture","Different infection","Both A and B"],a:[1],e:"A decreasing RBC count across successive tubes suggests a traumatic tap rather than persistent intracranial bleeding."},
+{t:"mcq",q:"CSF turbidity can result from all of the following EXCEPT:",o:["Increased WBCs","Increased RBCs","Increased microorganisms such as bacteria or yeast","Antigen-antibody complexes","A clot formed in CSF with high protein"],a:[4],e:"The supplied options list cells, microorganisms, and antigen-antibody material as causes of turbidity; a clot is a separate finding and is the intended exception."},
+{t:"mcq",q:"In a urine hCG pregnancy test, what is detected in the urine sample?",o:["hCG hormone","Anti-hCG","Anti-hCG immunoglobulin","All of the above"],a:[0],e:"The test detects hCG in the urine. The antibodies are reagents used by the test, not the analyte being measured."},
+{t:"mcq",q:"Which specimen is NOT listed as a sample for HIV testing in the supplied notes?",o:["Whole blood","Serum","Plasma","Urine"],a:[3],e:"The supplied exam lists whole blood, serum, and plasma; urine is the exception."},
+{t:"mcq",q:"What may be detected in an HIV serologic test according to the supplied options?",o:["Antibody to HIV-1","Antibody to HIV-1 and HIV-2","Antigen of HIV-1","Antigen of HIV-1 and HIV-2","All of the above"],a:[4],e:"The supplied question's intended answer is 'all' because the listed HIV serologic testing concepts include antibodies and antigens."},
+{t:"mcq",q:"Which serologic test is important in investigating post-streptococcal diseases such as rheumatic fever and glomerulonephritis?",o:["Widal test","ASO","RF","CRP"],a:[1],e:"ASO (antistreptolysin O) testing is used to provide evidence of recent streptococcal infection."},
+{t:"mcq",q:"Which test is used for diagnosis of typhus and certain other rickettsial diseases?",o:["Widal test","Weil-Felix test","RF","ASO"],a:[1],e:"The supplied notes identify the Weil-Felix test for certain rickettsial diseases."},
+{t:"mcq",q:"In the supplied question, which test uses known Proteus strains to detect antibodies against somatic O and flagellar H antigens?",o:["Widal test","Weil-Felix test","RF","ASO"],a:[1],e:"The wording describes the Weil-Felix test, which uses Proteus strains as antigenic reagents for certain rickettsial antibodies."},
+{t:"mcq",q:"Which urine sediment structure is different from the others?",o:["Granular cast","Hyaline cast","Epithelial cell cast","Crystal cast"],a:[3],e:"The first three are casts. Crystals are a different formed element and are not casts."},
+{t:"mcq",q:"Long cylindrical structures formed by solidification of material within the lumen of kidney tubules are:",o:["Casts","Crystals","Epithelial cells","Cells"],a:[0],e:"Urinary casts are cylindrical structures formed within renal tubules."},
+{t:"mcq",q:"Which factor does NOT contribute to crystal formation in urine?",o:["Dilution of solute in urine","Decreased flow through tubules","Supersaturation of ultrafiltrate in tubules","Increased flow through tubules"],a:[0],e:"Dilution lowers solute concentration and therefore works against crystal formation; decreased flow and supersaturation favor it."},
+{t:"tf",q:"The highest blood glucose concentration that will result in glycosuria is termed the renal threshold.",o:["True","False"],a:[0],e:"The renal threshold is the plasma glucose level above which glucose begins to appear in urine."},
+{t:"mcq",q:"Which are physiologic conditions that can cause glycosuria in the supplied notes? Select all that apply.",o:["Large ingestion of carbohydrates","Anything that stimulates the sympathetic nervous system","Diabetes mellitus","Endocrine disorders"],a:[0,1],e:"The supplied exam groups A and B as physiologic causes; diabetes mellitus and endocrine disorders are pathologic conditions."}
+];
+
+let i=0,score=0,wrong=[];
+function render(){
+ const q=Q[i], quiz=document.getElementById("quiz");
+ document.getElementById("count").textContent=`Question ${i+1} of ${Q.length}`;
+ document.getElementById("bar").style.width=((i/Q.length)*100)+"%";
+ let intro=q.t==="tf"?"True / False":q.a.length>1?"Select all that apply":"Multiple choice";
+ quiz.innerHTML=`<div class="muted">${intro}</div><div class="q">${q.q}</div>`;
+ q.o.forEach((x,j)=>{
+   const b=document.createElement("button"); b.className="opt"; b.textContent=String.fromCharCode(65+j)+". "+x;
+   b.onclick=()=>answer(j); quiz.appendChild(b);
+ });
+}
+function answer(first){
+ const q=Q[i], buttons=[...document.querySelectorAll(".opt")];
+ let selected=[first];
+ if(q.a.length>1){
+   buttons.forEach((b,j)=>{b.onclick=()=>{if(selected.includes(j))selected=selected.filter(x=>x!==j);else selected.push(j);buttons.forEach((z,k)=>z.style.outline=selected.includes(k)?"2px solid #aeb5bc":"");}});
+   const go=document.createElement("button");go.className="next";go.textContent="Submit selection";
+   go.onclick=()=>grade(selected);document.getElementById("quiz").appendChild(go);
+ } else grade(selected);
+}
+function grade(sel){
+ const q=Q[i], good=sel.length===q.a.length&&sel.every(x=>q.a.includes(x));
+ document.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(q.a.includes(j))b.classList.add("correct");else if(sel.includes(j))b.classList.add("wrong")});
+ if(good)score++;else wrong.push({q:q.q,e:q.e});
+ const f=document.createElement("div");f.className="feedback";f.innerHTML=good?"✓ Correct":`✗ Incorrect<br><span class="muted">${q.e}</span>`;
+ document.getElementById("quiz").appendChild(f);
+ const n=document.createElement("button");n.className="next";n.textContent=i===Q.length-1?"Show results":"Next question";n.onclick=()=>{i++;i<Q.length?render():finish()};document.getElementById("quiz").appendChild(n);
+}
+function finish(){
+ document.getElementById("bar").style.width="100%";
+ document.getElementById("quiz").classList.add("hidden");
+ const r=document.getElementById("result");r.classList.remove("hidden");
+ const pct=Math.round(score/Q.length*100);
+ let level=pct>=85?"Excellent":pct>=70?"Good":pct>=50?"Needs more review":"Needs substantial review";
+ r.innerHTML=`<div class="score">${score}/${Q.length}</div><h2>${pct}% — ${level}</h2><p>Correct: ${score}<br>Incorrect: ${Q.length-score}</p><h3>Review of missed questions</h3>`+
+ (wrong.length?wrong.map((x,n)=>`<p><b>${n+1}.</b> ${x.q}<br><span class="muted">${x.e}</span></p>`).join(""):"<p>Perfect score. No missed-question explanations.</p>");
+}
+render();
+</script>
+</body>
+</html>
